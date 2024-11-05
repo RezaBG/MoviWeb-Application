@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ user.name }}'s Movies</title>
+</head>
+<body>
+<h1>{{ user.name }}'s Favorite Movies</h1>
+<ul>
+  {% for movie in movies %}
+  <li>
+    <strong>Title:</strong> {{ movie.name }} <br>
+    <strong>Director:</strong> {{ movie.director }} <br>
+    <strong>Year:</strong> {{ movie.year }} <br>
+    <strong>Rating:</strong> {{ movie.rating }}
+  </li>
+  {% else %}
+  <p>No movies found for this user.</p>
+  {% endfor %}
+</ul>
+<a href="/users">Back to Users</a>
+</body>
+</html>
