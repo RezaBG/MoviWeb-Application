@@ -1,32 +1,38 @@
-from http.client import responses
 import requests
+from flask_migrate import Migrate
+from datetime import datetime
 
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, current_app
 from datamanager.sqlite_data_manager import SQLiteDataManager
 from datamanager.models import db, User, Movie
 
-app=Flask(__name__)
-app.config['SECRET_KEY']='your_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///moviweb.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your_secret_key'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///moviweb.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 OMDB_API_KEY = "7428de20"
 OMDB_API_URL = "http://www.omdbapi.com/"
 
 # Initialize SQLAlchemy with the app
 db.init_app(app)
+migrate = Migrate()
+
+migrate.init_app(app, db)
 
 # Create database tables if they don't exist
 with app.app_context():
     db.create_all()
 
 # Instantiate the data manager
-data_manager=SQLiteDataManager(app)
+data_manager = SQLiteDataManager(app)
 
 
 @app.route("/")
 def home():
     return "Welcome to MoviWeb App!"
+
 
 # Route to display a form for adding a new user
 @app.route("/add_user", methods=['GET', 'POST'])
@@ -67,16 +73,28 @@ def delete_user(user_id):
 
 @app.route("/users")
 def list_users():
-    users=data_manager.get_all_users()
+    users = data_manager.get_all_users()
     print("USER RETRIEVED: ", users)
     return render_template("users.html", users=users)
 
 
 @app.route("/users/<int:user_id>")
 def user_movies(user_id):
-    user=data_manager.get_user(user_id)
-    movies=data_manager.get_user_movies(user_id)
-    app.logger.info("movies for user %s: %s", user_id, movies)
+    user = data_manager.get_user(user_id)
+    app.logger.debug("Data retrieved for user %s: % s", user_id, user)
+
+    if not user:
+        app.logger.warning("User %s not found", user_id)
+        return render_template("404.html"), 404
+
+    movies = data_manager.get_user_movies(user_id)
+
+    if not movies:
+        movies = []
+        app.logger.info("No movies for user %s", user_id)
+    else:
+        app.logger.info("Movies for user %s: %s", user_id, movies)
+
     return render_template("user_movies.html", user=user, movies=movies)
 
 
@@ -86,15 +104,15 @@ def add_movie(user_id):
         print("Received POST request")
 
         # Extract data from the JSON payload
-        name=request.form.get("name").strip()
+        name = request.form.get("name").strip()
 
         if not name:
-            flash('Movie name is required.')
+            flash('Movie name is required.', 'error')
             return redirect(url_for('user_movies', user_id=user_id))
 
         existing_movie = Movie.query.filter_by(name=name, user_id=user_id).first()
         if existing_movie:
-            flash('Movie already exists for this user.')
+            flash('Movie already exists for this user.', 'error')
             return redirect(url_for('user_movies', user_id=user_id))
 
         response = requests.get(OMDB_API_URL, params={
@@ -109,15 +127,34 @@ def add_movie(user_id):
                 year = movie_data.get('Year', "N/A")
                 rating = movie_data.get('imdbRating', "N/A")
 
-                new_movie = Movie(name=name, director=director, year=year, rating=rating, user_id=user_id)
-                data_manager.add_movie(new_movie)
-                print("NEW MOVIE ADDED: ", new_movie)
+                try:
+                    year_int = int(year)
+                    current_year = datetime.now().year
+                    if not (1900 <= year_int <= current_year):
+                        flash('Year must be between 1900 and current year.', 'error')
+                        return redirect(url_for('user_movies', user_id=user_id))
+                except ValueError:
+                    flash('Invalid year format received from OMDb.', 'error')
+                    return redirect(url_for('add_movie', user_id=user_id))
 
-                flash("Movie added successfully")
+                try:
+                    rating_float = float(rating)
+                    if not (1 <= rating_float <= 10):
+                        flash('Rating must be between 1 and 10.', 'error')
+                        return redirect(url_for('add_movie', user_id=user_id))
+                except ValueError:
+                    flash('Invalid rating format received from OMDb.', 'error')
+                    return redirect(url_for('add_movie', user_id=user_id))
+
+                new_movie = Movie(name=name, director=director, year=year, rating=rating, user_id=user_id)
+                db.session.add(new_movie)
+                db.session.commit()
+                print("NEW MOVIE ADDED: ", new_movie)
+                flash("Movie added successfully", "success")
             else:
-                flash("Movie not found in OMDb.")
+                flash("Movie not found in OMDb.", "error")
         else:
-            flash("Error fetching movie details from OMDb.")
+            flash("Error fetching movie details from OMDb.", "error")
 
         return redirect(url_for('user_movies', user_id=user_id))
 
@@ -127,7 +164,7 @@ def add_movie(user_id):
 @app.route("/users/<int:user_id>/update_movie/<int:movie_id>", methods=['GET', 'POST'])
 def update_movie(user_id, movie_id):
     # Retrieve the movie by ID
-    movie=db.session.query(Movie).get(movie_id)
+    movie = db.session.query(Movie).get(movie_id)
     print(movie)
 
     if not movie:
@@ -136,28 +173,33 @@ def update_movie(user_id, movie_id):
 
     if request.method == "POST":
         # Retrieve form data
-        name=request.form.get("name")
-        director=request.form.get("director")
+        name = request.form.get("name")
+        director = request.form.get("director")
+
         try:
-            year=int(request.form.get("year"))
-            rating=int(request.form.get("rating"))
+            year = int(request.form.get("year")) if request.form.get("year") else movie.year
         except ValueError:
+            flash("Invalid year format received from OMDb.", "error")
             return redirect(url_for("update_movie", user_id=user_id, movie_id=movie_id))
 
-        # Update movie details
-        movie.name=name
-        movie.director=director
-        movie.year=year
-        movie.rating=rating
+        try:
+            rating = float(request.form.get("rating")) if request.form.get("rating") else movie.rating
+        except ValueError:
+            flash("Invalid rating format received from OMDb.", "error")
+            return redirect(url_for("update_movie", user_id=user_id, movie_id=movie_id))
 
-        # Commit changes
+        if name:
+            movie.name = name
+        if director:
+            movie.director = director
+        movie.year = year
+        movie.rating = rating
+
         db.session.commit()
-        flash("Movie updated successfully.")
+        flash("Movie updated successfully", "success")
 
-        # Redirect bac to the user's movie list
         return redirect(url_for("user_movies", user_id=user_id))
 
-    # Redirect the update form with current movie details pre-filled
     return render_template("update_movie.html", user_id=user_id, movie=movie)
 
 
@@ -172,14 +214,17 @@ def delete_movie(user_id, movie_id):
         flash("Movie not found or unauthorized.")
     return redirect(url_for("user_movies", user_id=user_id))
 
+
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('404.html'), 404
 
+
 @app.errorhandler(500)
 def internal_error(error):
-    db.session.rollback() # rollback in this case to any transaction issues
+    db.session.rollback()  # rollback in this case to any transaction issues
     return render_template('500.html'), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)

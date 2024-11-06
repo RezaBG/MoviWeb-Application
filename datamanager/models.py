@@ -22,7 +22,7 @@ class Movie(db.Model):
     name = db.Column(db.String(100), nullable=False)
     director = db.Column(db.String(100), nullable=True)
     year = db.Column(db.Integer, nullable=True)
-    rating = db.Column(db.Integer, nullable=True)
+    rating = db.Column(db.Float, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     def __repr__(self):
