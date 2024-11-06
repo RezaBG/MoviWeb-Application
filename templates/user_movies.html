@@ -14,6 +14,11 @@
     <strong>Director:</strong> {{ movie.director }} <br>
     <strong>Year:</strong> {{ movie.year }} <br>
     <strong>Rating:</strong> {{ movie.rating }}
+
+    <form action="{{ url_for('delete_movie', user_id=user.id, movie_id=movie.id)}}" method="POST" style="display: inline">
+      <button type="submit">Delete</button>
+    </form>
+
   </li>
   {% else %}
   <p>No movies found for this user.</p>
