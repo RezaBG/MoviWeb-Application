@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ user.name }}'s Movies</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"
 </head>
 <body>
 <h1>{{ user.name }}'s Favorite Movies</h1>
-<ul>
+<ul class="movies-list">
   {% for movie in movies %}
   <li>
     <strong>Title:</strong> {{ movie.name }} <br>

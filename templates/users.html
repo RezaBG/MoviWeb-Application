@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>List of Users</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
   <h1>List of Users</h1>
-  <ul>
+  <ul class="user-list">
     {% for user in users %}
     <li>{{ user.name.title() }} (ID: {{ user.id }})</li>
     <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" style="display: inline">
@@ -19,3 +20,4 @@
   </ul>
 </body>
 </html>
+

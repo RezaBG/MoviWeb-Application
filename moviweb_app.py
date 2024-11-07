@@ -23,7 +23,7 @@ with app.app_context():
 
 @app.route("/")
 def home():
-    return "Welcome to MoviWeb App!"
+    return render_template("index.html")
 
 @app.errorhandler(404)
 def not_found_error(error):

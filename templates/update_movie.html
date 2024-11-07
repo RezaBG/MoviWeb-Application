@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Update Movie</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"
 </head>
 <body>
 <h1>Update Movie Details</h1>
-<form method="POST" action="{{ url_for('update_movie', user_id=user_id, movie_id=movie.id) }}">
+<form class="movie-form" method="POST" action="{{ url_for('update_movie', user_id=user_id, movie_id=movie.id) }}">
   <label for="name">Movie Title</label>
   <input type="text" name="name" id="name" value="{{ movie.name }}" required><br>
 

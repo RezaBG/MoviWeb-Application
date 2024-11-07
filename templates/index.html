@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MoviWeb App - Home</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+<h1>Welcome to MoviWeb App!</h1>
+<nav>
+  <ul>
+    <li><a href="{{ url_for('users.list_users') }}">List of Users</a></li>
+    <li><a href="{{ url_for('users.add_user') }}">Add New User</a></li>
+    <li><a href="{{ url_for('movies.add_movie', user_id=1) }}">Add a New Movie</a> (replace user_id=1 with the actual user ID as needed)</li>
+  </ul>
+</nav>
+</body>
+</html>
