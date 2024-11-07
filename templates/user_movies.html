@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ user.name }}'s Movies</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-<h1>{{ user.name }}'s Favorite Movies</h1>
+<h1>{{ user.name.title() }}'s Favorite Movies</h1>
 <ul class="movies-list">
   {% for movie in movies %}
   <li>
@@ -16,7 +16,7 @@
     <strong>Year:</strong> {{ movie.year }} <br>
     <strong>Rating:</strong> {{ movie.rating }}
 
-    <form action="{{ url_for('delete_movie', user_id=user.id, movie_id=movie.id)}}" method="POST" style="display: inline">
+    <form action="{{ url_for('movies.delete_movie', user_id=user.id, movie_id=movie.id)}}" method="POST" style="display: inline">
       <button type="submit">Delete</button>
     </form>
 

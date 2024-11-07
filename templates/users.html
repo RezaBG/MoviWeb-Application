@@ -10,8 +10,10 @@
   <h1>List of Users</h1>
   <ul class="user-list">
     {% for user in users %}
-    <li>{{ user.name.title() }} (ID: {{ user.id }})</li>
-    <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" style="display: inline">
+    <a href="{{ url_for('users.user_movies', user_id=user.id)}}" class="user-link">
+      <li>{{ user.name.title() }} (ID: {{ user.id }})</li>
+    </a>
+    <form action="{{ url_for('users.delete_user', user_id=user.id) }}" method="POST" style="display: inline">
       <button type="submit" onclick="return confirm('Are you sure you wanna delete this user?')">Delete</button>
     </form>
     {% else %}

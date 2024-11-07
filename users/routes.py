@@ -8,6 +8,7 @@ users_bp = Blueprint('users', __name__, template_folder='templates')
 @users_bp.route('/')
 def list_users():
     users = User.query.all()
+    print("Users retrieved from database:", users)
     return render_template('users.html', users=users)
 
 @users_bp.route('/add', methods=['GET','POST'])
