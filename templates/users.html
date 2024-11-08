@@ -7,19 +7,30 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-  <h1>List of Users</h1>
+
+<header>
+  <h1>Welcome to MoviWeb App!</h1>
+</header>
+
+<div class="container">
+  <h2>List of Users</h2>
   <ul class="user-list">
     {% for user in users %}
-    <a href="{{ url_for('users.user_movies', user_id=user.id)}}" class="user-link">
-      <li>{{ user.name.title() }} (ID: {{ user.id }})</li>
-    </a>
-    <form action="{{ url_for('users.delete_user', user_id=user.id) }}" method="POST" style="display: inline">
-      <button type="submit" onclick="return confirm('Are you sure you wanna delete this user?')">Delete</button>
-    </form>
+    <li>
+      <span>{{ user.name.title() }} (ID: {{ user.id }})</span>
+      <a href="{{ url_for('users.user_movies', user_id=user.id)}}" class="user-link">View Movies</a>
+      <form action="{{ url_for('users.delete_user', user_id=user.id) }}" method="POST" style="display: inline">
+        <button type="submit" onclick="return confirm('Are you sure you want to delete this user?')">Delete</button>
+      </form>
+    </li>
     {% else %}
-    <li>No users found</li>
+      <li>No users found</li>
     {% endfor %}
   </ul>
+</div>
+<footer>
+  <p>&copy; 2024 MoviWeb Application</p>
+</footer>
 </body>
 </html>
 
